@@ -1,5 +1,4 @@
 # Ledger Alpha
-
 A premium, responsive personal portfolio tracker for Indian stocks and SIP mutual funds. It uses a transaction-first model: each purchase has a date, units, and price/NAV, allowing the dashboard to distinguish capital invested, current value, and profit over time.
 
 ## Run locally
