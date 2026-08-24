@@ -78,7 +78,6 @@ function MusicPlayer({src}){
   )
 }
 
-/* ========== Live Custom Cursor ========== */
 function CustomCursor() {
   const dotRef = useRef(null)
   const ringRef = useRef(null)
@@ -99,7 +98,7 @@ function CustomCursor() {
     window.addEventListener('mousemove', move)
 
     const interactives = document.querySelectorAll(
-      'button, a, .oauth, .refresh, .add, .viewTabs button, .selectRow, .rowActions button, .musicToggle'
+      'button, a, .oauth, .refresh, .add, .viewTabs button, .selectRow, .rowActions button, .musicToggle, input'
     )
     interactives.forEach(el => {
       el.addEventListener('mouseenter', addHover)
@@ -350,23 +349,168 @@ function App(){
 }
 
 function Login({onLogin, notice}){
+  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [localNotice, setLocalNotice] = useState('')
+
+  const handleEmailAuth = async (e) => {
+    e.preventDefault()
+    if (!email || !password) {
+      setLocalNotice('Please enter both email and password')
+      return
+    }
+
+    setLoading(true)
+    setLocalNotice('')
+
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) throw error
+        setLocalNotice('Account created successfully! You can now sign in.')
+        setMode('login')
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+      }
+    } catch (err) {
+      setLocalNotice(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="login">
       <BgVideo src="https://res.cloudinary.com/x1e5dtb1/video/upload/v1787531589/login-bg.mp4"/>
       <div className="brand">LEDGER <i>ALPHA</i></div>
+
       <section className="loginCard">
         <span className="eyebrow">PRIVATE INVESTMENT LEDGER</span>
         <h1>Every rupee.<br/><em>In its place.</em></h1>
         <p>A personal ledger for the Indian investor who prefers clarity over noise.</p>
+
+        {/* Email / Password Form */}
+        <form onSubmit={handleEmailAuth} style={{marginTop: '28px', width: '340px'}}>
+          <div style={{marginBottom: '12px'}}>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '13px 14px',
+                background: 'rgba(15,21,28,0.85)',
+                border: '1px solid var(--line)',
+                color: 'var(--text)',
+                borderRadius: '4px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <div style={{marginBottom: '16px'}}>
+            <input
+              type="password"
+              placeholder="Password (min 6 characters)"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              minLength={6}
+              style={{
+                width: '100%',
+                padding: '13px 14px',
+                background: 'rgba(15,21,28,0.85)',
+                border: '1px solid var(--line)',
+                color: 'var(--text)',
+                borderRadius: '4px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="gold"
+            disabled={loading}
+            style={{width: '100%', justifyContent: 'center', gap: '10px'}}
+          >
+            {/* Akatsuki Cloud Logo - replace URL after removing white background */}
+            <img 
+              src="https://i.imgur.com/your-transparent-logo.png"   // ← PUT YOUR TRANSPARENT LOGO URL HERE
+              alt="Ledger"
+              style={{width: '22px', height: '22px', objectFit: 'contain'}}
+            />
+            {loading ? 'Please wait…' : mode === 'login' ? 'Sign In to Ledger' : 'Create Ledger Account'}
+          </button>
+
+          <p style={{
+            marginTop: '14px',
+            fontSize: '12px',
+            color: 'var(--muted)',
+            textAlign: 'center'
+          }}>
+            {mode === 'login' ? (
+              <>
+                New here?{' '}
+                <button
+                  type="button"
+                  onClick={() => {setMode('signup'); setLocalNotice('')}}
+                  style={{background:'none', border:'none', color:'var(--gold)', cursor:'pointer', textDecoration:'underline'}}
+                >
+                  Create a Ledger Account
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {setMode('login'); setLocalNotice('')}}
+                  style={{background:'none', border:'none', color:'var(--gold)', cursor:'pointer', textDecoration:'underline'}}
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </p>
+        </form>
+
+        {/* Divider */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          margin: '22px 0 16px',
+          width: '340px',
+          color: 'var(--muted)',
+          fontSize: '11px'
+        }}>
+          <div style={{flex:1, height:'1px', background:'var(--line)'}}></div>
+          <span>OR CONTINUE WITH</span>
+          <div style={{flex:1, height:'1px', background:'var(--line)'}}></div>
+        </div>
+
         <button className="oauth google" onClick={() => onLogin('google')}>
           G <span>Continue with Google</span>
         </button>
         <button className="oauth x" onClick={() => onLogin('twitter')}>
           𝕏 <span>Continue with X</span>
         </button>
-        {notice && <p className="notice"><CircleAlert/> {notice}</p>}
+
+        {(notice || localNotice) && (
+          <p className="notice">
+            <CircleAlert/> {localNotice || notice}
+          </p>
+        )}
+
         <small>By continuing, you agree to manage your own investment records.</small>
       </section>
+
       <div className="loginMark">₹<br/><span>EST. 2026</span></div>
     </main>
   )
