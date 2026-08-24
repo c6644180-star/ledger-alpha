@@ -12,6 +12,7 @@ export default async function handler(req, res) {
       .map(x => ({
         name: x.shortname || x.longname || x.symbol,
         symbol: (x.symbol || '').replace(/\.(NS|BO)$/, ''),
+        exchange: x.exchange === 'NSI' ? 'NSE' : 'BSE',
         type: 'stock'
       }));
     res.status(200).json({ results: found });
