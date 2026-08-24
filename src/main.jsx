@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {AreaChart, Area, BarChart, Bar, Cell, PieChart, Pie, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts'
 import {ArrowUpRight, Check, ChevronLeft, CircleAlert, Edit3, LogOut, Plus, RefreshCw, Search, Trash2, X} from 'lucide-react'
@@ -74,6 +74,51 @@ function MusicPlayer({src}){
       <button className="musicToggle" onClick={toggle}>
         {on ? '♫ Sound on' : '♪ Sound off'}
       </button>
+    </>
+  )
+}
+
+/* ========== Live Custom Cursor ========== */
+function CustomCursor() {
+  const dotRef = useRef(null)
+  const ringRef = useRef(null)
+
+  useEffect(() => {
+    const move = (e) => {
+      if (dotRef.current && ringRef.current) {
+        dotRef.current.style.left = e.clientX + 'px'
+        dotRef.current.style.top = e.clientY + 'px'
+        ringRef.current.style.left = e.clientX + 'px'
+        ringRef.current.style.top = e.clientY + 'px'
+      }
+    }
+
+    const addHover = () => document.body.classList.add('cursor-hover')
+    const removeHover = () => document.body.classList.remove('cursor-hover')
+
+    window.addEventListener('mousemove', move)
+
+    const interactives = document.querySelectorAll(
+      'button, a, .oauth, .refresh, .add, .viewTabs button, .selectRow, .rowActions button, .musicToggle'
+    )
+    interactives.forEach(el => {
+      el.addEventListener('mouseenter', addHover)
+      el.addEventListener('mouseleave', removeHover)
+    })
+
+    return () => {
+      window.removeEventListener('mousemove', move)
+      interactives.forEach(el => {
+        el.removeEventListener('mouseenter', addHover)
+        el.removeEventListener('mouseleave', removeHover)
+      })
+    }
+  }, [])
+
+  return (
+    <>
+      <div className="cursor-dot" ref={dotRef}></div>
+      <div className="cursor-ring" ref={ringRef}></div>
     </>
   )
 }
@@ -250,6 +295,7 @@ function App(){
 
   if(screen === 'login') return (
     <>
+      <CustomCursor />
       <MusicPlayer src="https://res.cloudinary.com/x1e5dtb1/video/upload/v1787532150/bg-music.mp3"/>
       <Login onLogin={login} notice={notice}/>
     </>
@@ -257,6 +303,7 @@ function App(){
 
   if(screen === 'onboard') return (
     <>
+      <CustomCursor />
       <MusicPlayer src="https://res.cloudinary.com/x1e5dtb1/video/upload/v1787532150/bg-music.mp3"/>
       <Onboard
         initial={holdings.filter(h => !h.id.startsWith('d'))}
@@ -274,6 +321,7 @@ function App(){
 
   return (
     <>
+      <CustomCursor />
       <MusicPlayer src="https://res.cloudinary.com/x1e5dtb1/video/upload/v1787532150/bg-music.mp3"/>
       <Dashboard
         holdings={holdings}
