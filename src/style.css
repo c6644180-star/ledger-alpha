@@ -12,7 +12,7 @@
   --red:#e2604b;
   --muted:#8b96a3;
   --text:#f0f1ef;
-  --price:#ffffff;          /* ← force white prices */
+  --price:#ffffff;
 }
 
 *{box-sizing:border-box}
@@ -24,17 +24,49 @@ body{
   color:var(--text);
   font-family:'DM Sans',sans-serif;
   font-size:14px;
-  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='5' fill='%23d4af37' opacity='0.9'/%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='%23d4af37' stroke-width='1' opacity='0.4'/%3E%3C/svg%3E") 12 12, auto;
+  cursor: none; /* hide default cursor */
 }
 
-button,input,select{font:inherit}
-button{color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible{
-  outline:2px solid var(--gold);
-  outline-offset:3px;
+/* ========== Live Custom Cursor ========== */
+.cursor-dot,
+.cursor-ring{
+  position:fixed;
+  top:0;
+  left:0;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:9999;
+  transition: width .2s, height .2s, background .2s, border-color .2s;
 }
 
-/* ========== Background Video – smoother & better looking ========== */
+.cursor-dot{
+  width:8px;
+  height:8px;
+  background:#d4af37;
+  box-shadow:0 0 14px #d4af37;
+}
+
+.cursor-ring{
+  width:36px;
+  height:36px;
+  border:1.5px solid #d4af37aa;
+}
+
+body.cursor-hover .cursor-dot{
+  width:14px;
+  height:14px;
+  background:#f0d878;
+}
+
+body.cursor-hover .cursor-ring{
+  width:54px;
+  height:54px;
+  border-color:#f0d878;
+  background:#d4af3722;
+}
+
+/* ========== Background Video – clearer ========== */
 .bgVideo{
   position:fixed;
   inset:0;
@@ -46,19 +78,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{
   width:100%;
   height:100%;
   object-fit:cover;
-  opacity:0.32;                    /* slightly brighter */
-  filter:brightness(0.85) contrast(1.05) saturate(1.1);
+  opacity:0.48;
+  filter:brightness(0.95) contrast(1.08) saturate(1.15);
   transition:opacity 1.2s ease;
 }
 .bgVideo .bgOverlay{
   position:absolute;
   inset:0;
   background:
-    radial-gradient(ellipse at 30% 20%, #d4af3712 0%, transparent 50%),
-    linear-gradient(180deg, #070b10cc 0%, #070b10e8 55%, #070b10 100%);
+    radial-gradient(ellipse at 30% 20%, #d4af3718 0%, transparent 55%),
+    linear-gradient(180deg, 
+      rgba(7,11,16,0.55) 0%,
+      rgba(7,11,16,0.72) 50%,
+      rgba(7,11,16,0.88) 100%
+    );
 }
 
-/* make sure content stays above video */
 .login,.onboard,.dash{position:relative;z-index:1}
 
 /* ========== Brand & Typography ========== */
@@ -82,7 +117,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{
   transition:all .25s ease;
   box-shadow:0 4px 20px #d4af3722;
 }
-.gold:hover{transform:translateY(-1px);box-shadow:0 6px 28px #d4af3735}
+.gold:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 28px #d4af3740;
+}
 .gold:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* ========== Login ========== */
@@ -125,7 +163,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 .oauth:hover{
   border-color:var(--gold);
   background:rgba(20,28,36,0.9);
-  transform:translateY(-1px);
+  transform:translateY(-2px);
 }
 .oauth span{flex:1;text-align:center}
 .google{margin-top:35px}
@@ -200,7 +238,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{
   white-space:nowrap;
   padding:7px 9px;
   border-radius:3px;
+  transition:all .2s;
 }
+.search button:hover{border-color:var(--gold);color:var(--gold)}
 
 .selectionList{border:1px solid var(--line);background:var(--panel);border-radius:4px;overflow:hidden}
 .selectRow{
@@ -214,7 +254,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 }
 .selectRow:last-child{border:0}
 .selectRow.selected{background:#151c21}
-.selectRow:hover{background:#121920}
+.selectRow:hover{background:#151c24}
 
 .check{
   width:22px;height:22px;
@@ -317,7 +357,11 @@ nav{
   border-color:var(--gold);
   color:#f0d878;
 }
-.viewTabs button:hover:not(.on){border-color:#ffffff40;color:#ddd}
+.viewTabs button:hover:not(.on){
+  border-color:#ffffff40;
+  color:#ddd;
+  transform:translateY(-1px);
+}
 
 .hero{padding:58px 0 43px;display:flex;justify-content:space-between;align-items:end}
 .hero h1{font-size:clamp(48px,6.6vw,96px);margin:7px 0}
@@ -340,7 +384,11 @@ nav{
   border-radius:3px;
   transition:all .2s;
 }
-.refresh:hover,.add:hover{background:#252518;border-color:var(--gold)}
+.refresh:hover,.add:hover{
+  background:#252518;
+  border-color:var(--gold);
+  transform:translateY(-2px);
+}
 .refresh svg,.add svg{width:15px}
 
 .dashboardNotice{margin:0 0 20px;justify-content:flex-start}
@@ -360,9 +408,12 @@ nav{
   border-top:2px solid #41505d;
   padding:18px 16px;
   border-radius:4px;
-  transition:transform .2s, box-shadow .2s;
+  transition:transform .25s, box-shadow .25s;
 }
-.stat:hover{transform:translateY(-2px);box-shadow:0 8px 24px #00000040}
+.stat:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 30px #00000055;
+}
 .stat.gold{border-top-color:var(--gold)}
 .stat.teal{border-top-color:var(--teal)}
 .stat.green{border-top-color:var(--green)}
@@ -422,16 +473,24 @@ td b{font-family:'DM Sans';font-size:12px;color:var(--text)}
 td code.stock{color:var(--gold)}
 td code.fund{color:#56a69b}
 
-/* ★ Force white price color ★ */
-td span,
-.pricePulse,
-td .price {
-  color: var(--price) !important;
-  font-weight: 500;
+/* Force white price */
+td span.price,
+.pricePulse{
+  color:var(--price)!important;
+  font-weight:500;
 }
 
-.rowActions button{background:none;border:0;color:#89939b;padding:3px;transition:color .2s}
-.rowActions button:hover{color:var(--gold)}
+.rowActions button{
+  background:none;
+  border:0;
+  color:#89939b;
+  padding:3px;
+  transition:color .2s, transform .2s;
+}
+.rowActions button:hover{
+  color:var(--gold);
+  transform:scale(1.15);
+}
 .rowActions svg{width:14px}
 
 .pricePulse{animation:pulse 1.2s ease-in-out 2}
@@ -507,6 +566,7 @@ td .price {
   border-color:var(--gold);
   color:var(--gold);
   background:#0c1118ee;
+  transform:translateY(-2px);
 }
 
 /* Animations */
@@ -521,7 +581,7 @@ td .price {
 .spin{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Lookup & helpers */
+/* Helpers */
 .lookup{color:var(--muted);font-size:11px;margin:0 0 8px}
 .formHint{color:var(--muted);font-size:12px;line-height:1.5;margin:-14px 0 22px}
 .lastUpdate{color:var(--muted);font:10px 'DM Mono';display:flex;align-items:center;gap:6px}
@@ -556,4 +616,8 @@ td .price {
   .onboardFoot{padding:13px 15px}
   .onboardFoot .gold{padding:11px}
   .onboardFoot span{font-size:10px}
+
+  /* hide custom cursor on mobile */
+  .cursor-dot,.cursor-ring{display:none}
+  body{cursor:auto}
 }
