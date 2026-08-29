@@ -97,16 +97,30 @@ function CustomCursor() {
 
     window.addEventListener('mousemove', move)
 
-    const interactives = document.querySelectorAll(
-      'button, a, .oauth, .refresh, .add, .viewTabs button, .selectRow, .rowActions button, .musicToggle, input'
-    )
-    interactives.forEach(el => {
-      el.addEventListener('mouseenter', addHover)
-      el.addEventListener('mouseleave', removeHover)
+    const attach = () => {
+      const interactives = document.querySelectorAll(
+        'button, a, .oauth, .refresh, .add, .viewTabs button, .selectRow, .rowActions button, .musicToggle, input'
+      )
+      interactives.forEach(el => {
+        el.addEventListener('mouseenter', addHover)
+        el.addEventListener('mouseleave', removeHover)
+      })
+      return interactives
+    }
+
+    let interactives = attach()
+    const observer = new MutationObserver(() => {
+      interactives.forEach(el => {
+        el.removeEventListener('mouseenter', addHover)
+        el.removeEventListener('mouseleave', removeHover)
+      })
+      interactives = attach()
     })
+    observer.observe(document.body, {childList:true, subtree:true})
 
     return () => {
       window.removeEventListener('mousemove', move)
+      observer.disconnect()
       interactives.forEach(el => {
         el.removeEventListener('mouseenter', addHover)
         el.removeEventListener('mouseleave', removeHover)
@@ -218,8 +232,11 @@ function App(){
         try {
           const r = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(h.name)}`)
           const list = await r.json()
-          const best = (Array.isArray(list) ? list : [])[0]
-          if(!best) return null
+          const arr = Array.isArray(list) ? list : []
+          if(!arr.length) return null
+          const directGrowth = arr.find(x => /direct/i.test(x.schemeName) && /growth/i.test(x.schemeName) && !/idcw|dividend/i.test(x.schemeName))
+          const anyGrowth = arr.find(x => /growth/i.test(x.schemeName) && !/idcw|dividend/i.test(x.schemeName))
+          const best = directGrowth || anyGrowth || arr[0]
           const navRes = await fetch(`https://api.mfapi.in/mf/${best.schemeCode}/latest`)
           const navData = await navRes.json()
           const nav = Number(navData?.data?.[0]?.nav)
@@ -349,7 +366,7 @@ function App(){
 }
 
 function Login({onLogin, notice}){
-  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -359,6 +376,10 @@ function Login({onLogin, notice}){
     e.preventDefault()
     if (!email || !password) {
       setLocalNotice('Please enter both email and password')
+      return
+    }
+    if(!configured){
+      setLocalNotice('Add Supabase environment variables to enable real email sign-in.')
       return
     }
 
@@ -392,7 +413,6 @@ function Login({onLogin, notice}){
         <h1>Every rupee.<br/><em>In its place.</em></h1>
         <p>A personal ledger for the Indian investor who prefers clarity over noise.</p>
 
-        {/* Email / Password Form */}
         <form onSubmit={handleEmailAuth} style={{marginTop: '28px', width: '340px'}}>
           <div style={{marginBottom: '12px'}}>
             <input
@@ -439,12 +459,6 @@ function Login({onLogin, notice}){
             disabled={loading}
             style={{width: '100%', justifyContent: 'center', gap: '10px'}}
           >
-            {/* Akatsuki Cloud Logo - replace URL after removing white background */}
-            <img 
-              src="https://i.imgur.com/your-transparent-logo.png"   // ← PUT YOUR TRANSPARENT LOGO URL HERE
-              alt="Ledger"
-              style={{width: '22px', height: '22px', objectFit: 'contain'}}
-            />
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign In to Ledger' : 'Create Ledger Account'}
           </button>
 
@@ -480,7 +494,6 @@ function Login({onLogin, notice}){
           </p>
         </form>
 
-        {/* Divider */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -496,10 +509,12 @@ function Login({onLogin, notice}){
         </div>
 
         <button className="oauth google" onClick={() => onLogin('google')}>
-          G <span>Continue with Google</span>
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google"/>
+          <span>Continue with Google</span>
         </button>
         <button className="oauth x" onClick={() => onLogin('twitter')}>
-          𝕏 <span>Continue with X</span>
+          <span className="xIcon">𝕏</span>
+          <span>Continue with X</span>
         </button>
 
         {(notice || localNotice) && (
@@ -658,6 +673,7 @@ function Dashboard({holdings, history, notice, refreshing, onRefresh, onLogout, 
   const cost = shown.reduce((s,h) => s + invested(h), 0)
   const gain = total - cost
   const stocksValue = holdings.filter(h => h.type==='stock').reduce((s,h) => s + value(h), 0)
+  const fundsValue = holdings.filter(h => h.type==='fund').reduce((s,h) => s + value(h), 0)
 
   const chartHistory = (history.length
     ? history
@@ -736,7 +752,7 @@ function Dashboard({holdings, history, notice, refreshing, onRefresh, onLogout, 
       <section className="cards">
         <Stat label="TOTAL INVESTED" value={rupee(cost)}/>
         <Stat label="STOCKS VALUE" value={rupee(stocksValue)} tone="gold"/>
-        <Stat label="SIP / FUND VALUE" value={rupee(total-stocksValue)} tone="teal"/>
+        <Stat label="SIP / FUND VALUE" value={rupee(fundsValue)} tone="teal"/>
         <Stat label="NET GAIN / LOSS" value={rupee(gain)} tone={gain>=0?'green':'red'}/>
       </section>
 
